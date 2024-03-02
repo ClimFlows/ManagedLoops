@@ -106,6 +106,7 @@ include("julia/wrapped.jl")
 
 module _internals_
 
+using ..ManagedLoops: LoopManager, offload
 using MacroTools
 
 include("julia/at_unroll.jl")

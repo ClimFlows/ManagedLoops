@@ -33,7 +33,7 @@ function loops_macro_new(expr)
     end
 end
 
-# construct the function accepting a `ComputeBackend` as first argument
+# construct the function accepting a `LoopManager` as first argument
 # its body is a sequence of calls to `offload`
 function loops_macro_wrapper(expr, def, lines)
     def = deepcopy(def)
@@ -41,7 +41,7 @@ function loops_macro_wrapper(expr, def, lines)
     args[1] == :(_) || error(
         "In `@loops function fun(...) ...`, the first argument of `fun` must be the dummy argument `_`",
     )
-    args[1] = :(backend::$ComputeBackend)
+    args[1] = :(backend::$LoopManager)
 
     # array of function calls
     def[:body].args = [
