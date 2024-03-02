@@ -1,8 +1,11 @@
 # ManagedLoops
 
+[![CI](https://github.com/ClimFlows/ManagedLoops/actions/workflows/CI.yml/badge.svg)](https://github.com/ClimFlows/ManagedLoops/actions/workflows/CI.yml)
+[![Code Coverage](https://codecov.io/gh/ClimFlows/ManagedLoops/branch/main/graph/badge.svg)](https://codecov.io/gh/ClimFlows/ManagedLoops)
+
 `ManagedLoops` defines an API to separate the task of writing loops from the task of defining how to
 execute the loops (e.g. using SIMD, multiple threads, or on a GPU). In addition it provides convenience macros
-`@unroll` to unroll loops whose length is known at *parse* time and `@vec` to mark loops as suitablecfor SIMD vectorization.
+`@unroll` to unroll loops whose length is known at *parse* time and `@vec` to mark loops as suitable for SIMD vectorization.
 
 The API is based on the abstract type `LoopManager` and its descendents, and on the function `offload`.
 Manager types deriving from `LoopManager` offer different iteration strategies, see package `LoopManagers`.
@@ -13,7 +16,7 @@ Function `offload` may be called directly, or may hide behind the `@loops` macro
 ```
     function loop1(range, args...)
         # do some computation shared by all indices i
-        for i irange
+        for i in irange
             # do some work at index i
         end
     end
