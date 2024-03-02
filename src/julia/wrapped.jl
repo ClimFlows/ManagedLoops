@@ -6,7 +6,7 @@ concrete children types possess a field `wrapped::B` referring to the wrapped ma
 Routines accepting a `mgr::LoopManager` argument may provide a fallback implementation
 for `mgr::WrapperManager` by calling themselves with `mgr.wrapped` as argument.
 """
-abstract type WrapperManager{B, SuperType<:LoopManager} <: SuperType end
+abstract type WrapperManager{M<:LoopManager} <: LoopManager end
 
 """
     abstract type WrappedArray{A} end
