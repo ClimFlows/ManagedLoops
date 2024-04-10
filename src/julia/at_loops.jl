@@ -4,6 +4,11 @@ end
 
 function loops_macro_new(expr)
     def = MacroTools.splitdef(expr)
+    def[:args][1] == :(_) || error("""
+    In `@loops function fun(...) ...`, the first argument of `fun` must be the dummy argument `_`
+        $(MacroTools.striplines(expr)) """
+    )
+
     body = def[:body].args
     lines = filter(line -> !isa(line, LineNumberNode), body)
 
@@ -26,8 +31,9 @@ function loops_macro_new(expr)
     # calls `offload` for each kernel
     wrapper = loops_macro_wrapper(expr, def, lines)
 
-    quote
-        @inline $expr
+    def[:args][1] = :(::Nothing) # must be done after previous line for obscure reason
+    return quote
+        @inline $(combinedef(def))
         @inline $wrapper
         $(kernels...)
     end
@@ -38,20 +44,20 @@ end
 function loops_macro_wrapper(expr, def, lines)
     def = deepcopy(def)
     args = def[:args]
-    args[1] == :(_) || error(
-        "In `@loops function fun(...) ...`, the first argument of `fun` must be the dummy argument `_`",
-    )
-    args[1] = :(backend::$LoopManager)
+    args[1] = :(mgr::$LoopManager)
 
     # array of function calls
     def[:body].args = [
         let call = deepcopy(expr.args[1])
             _, values, _ = loops_macro_capture(expr, lines[i])
             # prepare call expression : pop function name and dummy first argument
+            @info call.args
             fun = popfirst!(call.args)
             popfirst!(call.args)
+            @info call.args
             # prepend our arguments
-            pushfirst!(call.args, offload, fun, :backend, values, :(Val($i)))
+            pushfirst!(call.args, offload, fun, :mgr, values, :(Val($i)))
+            @info call.args
             :(@inline $call)
         end for i in eachindex(lines)
     ]
