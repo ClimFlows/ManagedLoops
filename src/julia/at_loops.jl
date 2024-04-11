@@ -57,7 +57,6 @@ function loops_macro_wrapper(expr, def, lines)
             @info call.args
             # prepend our arguments
             pushfirst!(call.args, offload, fun, :mgr, values, :(Val($i)))
-            @info call.args
             :(@inline $call)
         end for i in eachindex(lines)
     ]

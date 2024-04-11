@@ -96,17 +96,19 @@ Returns a manager similar to `mgr` but with SIMD disabled.
 """
 no_simd(mgr::LoopManager) = mgr
 
+# To support branching + SIMD
+choose(flag::Bool, iftrue, iffalse) = flag ? iftrue() : iffalse()
+
+
 # parallel, barrier, master, share
 include("julia/parallel.jl")
 
 # API for wrapped managers and arrays
 include("julia/wrapped.jl")
 
-# macros
-
 module _internals_
 
-using ..ManagedLoops: LoopManager, offload
+using ..ManagedLoops: LoopManager, offload, choose
 using MacroTools
 
 include("julia/at_unroll.jl")
