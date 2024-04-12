@@ -96,6 +96,12 @@ Returns a manager similar to `mgr` but with SIMD disabled.
 """
 no_simd(mgr::LoopManager) = mgr
 
+"""
+    synchronize(mgr)
+Waits until ongoing computations on `mgr` work complete. Should be specialized for GPU managers.
+"""
+synchronize(::LoopManager) = nothing
+
 # To support branching + SIMD
 choose(flag::Bool, iftrue, iffalse) = flag ? iftrue() : iffalse()
 
