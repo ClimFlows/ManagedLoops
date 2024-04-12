@@ -1,4 +1,4 @@
-using ManagedLoops: @loops, @vec, @unroll
+using ManagedLoops: @loops, @vec, @unroll, choose
 using Test
 
 @loops function test1!(_, a, b, c)
@@ -20,6 +20,15 @@ end
     end
 end
 
+@loops function test3!(_, a, b, c)
+    let (irange, jrange) = axes(c)
+        @vec for i in irange, j in jrange
+            a[i,j] = @vec if b[i,j]>0 c[i,j] else c[i,j]^2 end
+            b[i,j] = b[i,j]>0 ? c[i,j] : c[i,j]^2
+        end
+    end
+end
+
 function check(fun!, c)
     a, b = similar(c), similar(c)
     fun!(nothing, a, b, c)
@@ -29,4 +38,5 @@ end
 @testset "Macros" begin
     @test check(test1!, randn(100))
     @test check(test2!, randn(100, 100))
+    @test check(test3!, randn(100, 100))
 end

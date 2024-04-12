@@ -51,10 +51,8 @@ function loops_macro_wrapper(expr, def, lines)
         let call = deepcopy(expr.args[1])
             _, values, _ = loops_macro_capture(expr, lines[i])
             # prepare call expression : pop function name and dummy first argument
-            @info call.args
             fun = popfirst!(call.args)
             popfirst!(call.args)
-            @info call.args
             # prepend our arguments
             pushfirst!(call.args, offload, fun, :mgr, values, :(Val($i)))
             :(@inline $call)
