@@ -1,4 +1,4 @@
-using ManagedLoops: @loops, @vec, @unroll, choose
+using ManagedLoops: @loops, @vec, @unroll
 using Test
 
 @loops function test1!(_, a, b, c)
