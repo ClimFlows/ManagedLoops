@@ -21,7 +21,9 @@ macro vec(expr)
 end
 
 function vec_macro(expr)
-    if @capture(expr,  for a_ in b_ ; body__ ; end )
+    if @capture(expr,  if a_ ; b_ ; else ; c_ ; end )
+        return :($choose($a, ()->$b, ()->$c))
+    elseif @capture(expr,  for a_ in b_ ; body__ ; end )
         return quote
             for $a in $bulk($b)
                 $(body...)
