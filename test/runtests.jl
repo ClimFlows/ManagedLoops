@@ -22,9 +22,11 @@ end
 
 @loops function test3!(_, a, b, c)
     let (irange, jrange) = axes(c)
-        @vec for i in irange, j in jrange
-            a[i,j] = @vec if b[i,j]>0 c[i,j] else c[i,j]^2 end
-            b[i,j] = b[i,j]>0 ? c[i,j] : c[i,j]^2
+        for j in jrange
+            @vec for i in irange
+                a[i,j] = @vec if b[i,j]>0 c[i,j] else c[i,j]^2 end
+                b[i,j] = b[i,j]>0 ? c[i,j] : c[i,j]^2
+            end
         end
     end
 end
