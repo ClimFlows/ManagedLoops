@@ -120,6 +120,7 @@ using MacroTools
 include("julia/at_unroll.jl")
 include("julia/at_loops.jl")
 include("julia/at_vec.jl")
+include("julia/broadcast.jl")
 
 end # internals
 
