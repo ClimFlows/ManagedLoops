@@ -5,7 +5,6 @@ version = "0.1.4"
 
 [deps]
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-MutatingOrNot = "6a37069a-9a67-4b2d-a34a-f09ab4b23c7c"
 
 [compat]
 MacroTools = "0.5.7"
