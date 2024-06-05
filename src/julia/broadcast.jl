@@ -8,14 +8,44 @@ Base.ndims(::Type{ManagedArray{A}}) where A = ndims(A)
 Base.size(ma::ManagedArray) = size(ma.a)
 
 function Base.copyto!(ma::ManagedArray, bc::Broadcast.Broadcasted)
-    managed_copyto!(ma.mgr, ma.a, bc)
+    managed_copyto!(ma.mgr, ma.a, bc, axes(bc)...)
     return ma.a
 end
 
-@loops function managed_copyto!(_, a, bc)
-    let irange = eachindex(a)
+@loops function managed_copyto!(_, a, bc, ax1)
+    let irange = ax1
         @vec for i in irange
             @inbounds a[i] = bc[i]
+        end
+    end
+end
+
+@loops function managed_copyto!(_, a, bc, ax1, ax2)
+    let (irange, jrange) = (ax1, ax2)
+        for j in jrange
+            @vec for i in irange
+                @inbounds a[i,j] = bc[i,j]
+            end
+        end
+    end
+end
+
+@loops function managed_copyto!(_, a, bc, ax1, ax2, ax3)
+    let (irange, jrange, krange) = (ax1, ax2, ax3)
+        for j in jrange, k in krange
+            @vec for i in irange
+                @inbounds a[i,j,k] = bc[i,j,k]
+            end
+        end
+    end
+end
+
+@loops function managed_copyto!(_, a, bc, ax1, ax2, ax3, ax4)
+    let (irange, jrange, krange, lrange) = (ax1, ax2, ax3, ax4)
+        for j in jrange, k in krange, l in lrange
+            @vec for i in irange
+                @inbounds a[i,j,k,l] = bc[i,j,k,l]
+            end
         end
     end
 end

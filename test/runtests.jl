@@ -1,5 +1,8 @@
-using ManagedLoops: @loops, @vec, @unroll
+using ManagedLoops: ManagedLoops, @loops, @vec, @unroll
 using Test
+
+struct PlainCPU <: ManagedLoops.HostManager end
+ManagedLoops.offload(fun, ::PlainCPU, range, args...) = fun(range, args...)
 
 @loops function test1!(_, a, b, c)
     let irange = eachindex(a, b, c)
@@ -31,14 +34,30 @@ end
     end
 end
 
-function check(fun!, c)
+function check(mgr, fun!, c)
     a, b = similar(c), similar(c)
-    fun!(nothing, a, b, c)
+    fun!(mgr, a, b, c)
     return a ≈ b
 end
 
+function test_bc(mgr, dims)
+    a, b, c = ( randn(dims) for i=1:3)
+    @. mgr[a] = log(exp(b)*exp(c))
+    return true
+end
+
 @testset "Macros" begin
-    @test check(test1!, randn(100))
-    @test check(test2!, randn(100, 100))
-    @test check(test3!, randn(100, 100))
+    for mgr in (nothing, PlainCPU())
+        @test check(mgr, test1!, randn(100))
+        @test check(mgr, test2!, randn(100, 100))
+        @test check(mgr, test3!, randn(100, 100))
+    end
+end
+
+@testset "Broadcast" begin
+    mgr = PlainCPU()
+    @test test_bc(mgr, 1000)
+    @test test_bc(mgr, (100,100))
+    @test test_bc(mgr, (100,100,100))
+    @test test_bc(mgr, (10,10,10))
 end
