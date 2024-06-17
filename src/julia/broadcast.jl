@@ -31,8 +31,8 @@ end
 end
 
 @loops function managed_copyto!(_, a, bc, ax1, ax2, ax3)
-    let (irange, jrange, krange) = (ax1, ax2, ax3)
-        for j in jrange, k in krange
+    let (irange, jrange) = (ax1, ax2)
+        for j in jrange, k in ax3
             @vec for i in irange
                 @inbounds a[i,j,k] = bc[i,j,k]
             end
@@ -41,8 +41,8 @@ end
 end
 
 @loops function managed_copyto!(_, a, bc, ax1, ax2, ax3, ax4)
-    let (irange, jrange, krange, lrange) = (ax1, ax2, ax3, ax4)
-        for j in jrange, k in krange, l in lrange
+    let (irange, jrange) = (ax1, ax2)
+        for j in jrange, k in ax3, l in ax4
             @vec for i in irange
                 @inbounds a[i,j,k,l] = bc[i,j,k,l]
             end
