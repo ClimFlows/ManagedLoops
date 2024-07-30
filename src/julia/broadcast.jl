@@ -4,6 +4,11 @@ struct ManagedArray{A,M,T,N} <: AbstractArray{T,N}
     ManagedArray(mgr::M, a::A) where {M,A}= new{A, M, eltype(a), ndims(a)}(mgr, a)
 end
 
+struct ManagedOther{Other,M}
+    mgr::M
+    other::Other
+end
+
 Base.ndims(::Type{ManagedArray{A}}) where A = ndims(A)
 Base.size(ma::ManagedArray) = size(ma.a)
 
@@ -51,4 +56,17 @@ end
 end
 
 # support for syntax : @. mgr[a] = b + c
+# which is semantically equivalent to:
+#     @. a = b + c
+# if a is an array, otherwise to:
+#     @. b + c
 Base.getindex(mgr::LoopManager, a::AbstractArray) = ManagedArray(mgr, a)
+Base.getindex(mgr::LoopManager, other) = ManagedOther(mgr, other)
+
+@inline function Broadcast.materialize!(lhs::ManagedOther, bc::Broadcast.Broadcasted)
+    bc = Broadcast.instantiate(bc)
+    T = Broadcast.combine_eltypes(bc.f, bc.args)
+    a = similar(bc, T)
+    managed_copyto!(lhs.mgr, a, bc, axes(bc)...)
+    return a
+end
