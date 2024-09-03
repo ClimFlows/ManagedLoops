@@ -23,6 +23,8 @@ end
 function vec_macro(expr)
     if @capture(expr,  if a_ ; b_ ; else ; c_ ; end )
         return :($choose($a, ()->$b, ()->$c))
+    elseif @capture(expr,  a_ ? b_ : c_ )
+            return :($choose($a, ()->$b, ()->$c))
     elseif @capture(expr,  for a_ in b_ ; body__ ; end )
         return quote
             for $a in $bulk($b)
