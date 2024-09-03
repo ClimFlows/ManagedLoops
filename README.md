@@ -8,13 +8,16 @@ execute the loops (e.g. using SIMD, multiple threads, or on a GPU). In addition 
 `@unroll` to unroll loops whose length is known at *parse* time and `@vec` to mark loops as suitable for SIMD vectorization.
 
 The API is based on the abstract type `LoopManager` and its descendents, and on the function `offload`.
-Manager types deriving from `LoopManager` offer different iteration strategies, see package `LoopManagers`.
-Function `offload` may be called directly, or may hide behind the `@loops` macro.
+Manager types deriving from `LoopManager` offer different iteration strategies, see package [`LoopManagers`](https://github.com/ClimFlows/LoopManagers.jl).
+Function `offload` may be called directly (lower-level API), or may hide behind the `@loops` macro (higher-level API).
 
+`ManagedLoops` is very lightweight and depends only on `MacroTools`. Thus, making it a dependency of your "provider" modules, where number-crunching routines are defined, is very cheap. [`LoopManagers`](https://github.com/ClimFlows/LoopManagers.jl) is a more heavyweight package, but only "consumer" modules, those which create loop managers and pass them to functions, need to depend on it.
 
-## High-level use
+Furthermore the high-level API is designed to have a small entry cost (loops must be placed in loop-only functions) and a zero exit cost:
+* If do not want to depend on `LoopManagers`,  pass `nothing` as the first argument of `@loops` functions and they will work "normally", as if `@loops` and `@vec` were not there.
+* If you decide to drop `ManagedLoops` altogether, simply remove `@loops` and `@vec` and your code just works.
 
-The high-level API is designed to have a zero exit cost: remove `@loops` and `@vec` and your code just works.
+## High-level user API
 
 ### Single loop
 
@@ -30,7 +33,7 @@ The high-level API is designed to have a zero exit cost: remove `@loops` and `@v
         end
     end
 
-    loop1!(nothing, x, y) # just calls loop1! "as-is"
+    loop!(x,y) = loop1!(nothing, x, y) # plain loop, no manager needed
     loop1!(mgr::LoopManager, x, y) # loops are "managed" by `mgr`, provided for instance by `LoopManagers`
 ```
 
@@ -66,7 +69,7 @@ The high-level API is designed to have a zero exit cost: remove `@loops` and `@v
 
 Type annotations are not supported with `@loops`. This limitation could be relaxed with some work.
 
-## Lower-level use (the magic under the hood)
+## Under the hood
 
 The `@loops` macro expands to something similar to the following.
 
@@ -154,10 +157,10 @@ OpenMP-like execution with long-lived threads. This is currently experimental an
 ## Change Log
 
 ### 0.1.7
-* SIMD support for ternary operator. `@vec a ? b : c` now expands to `choose(a, ()->b, ()->c)`
+* `@vec` for ternary operator. `@vec a ? b : c` now expands to `choose(a, ()->b, ()->c)`
 
 ### 0.1.6
-* SIMD support for `if-then-else` expressions. `@vec if a ; b ; else c ; end` now expands to `choose(a, ()->b, ()->c)`. `choose(a, B, C)` evaluates only `B()` (resp. `C()` when `a` is all `true` (resp. all `false`). Otherwise both are evaluated and blended.
+* `@vec` for `if-then-else` expressions. `@vec if a ; b ; else c ; end` now expands to `choose(a, ()->b, ()->c)`. `choose(a, B, C)` evaluates only `B()` (resp. `C()`) when `a` is all `true` (resp. all `false`). Otherwise both are evaluated and blended.
 
 ### 0.1.5
 * support for "managed broadcasting": if the l.h.s of a broadcast expression `@. lhs = rhs` is of the form `lhs = mgr[array]` then the broadcast loop is managed by `mgr`. Limited to 4D arrays for the moment.
