@@ -9,7 +9,7 @@ Each thread receives the per-thread manager `thread_mgr` which is derived from `
 and can be used by `fun` with `offload` and `barrier`.
 If `mgr` is not a multithread manager, defaults to `fun(mgr, args...)`.
 """
-@inline parallel(fun::Fun, mgr::LoopManager, args::Vararg{Any,NA}) where {Fun, NA} = fun(mgr, args...)
+@inline parallel(fun::Fun, mgr::Union{Nothing, LoopManager}, args::Vararg{Any,NA}) where {Fun, NA} = fun(mgr, args...)
 
 """
     barrier(mgr::LoopManager)
@@ -18,7 +18,7 @@ If `mgr` is not a multithread manager, defaults to `fun(mgr, args...)`.
 Synchronization barrier. If the code invoking `barrier` has been launched by [`parallel`](@ref)
 and `mgr` is a per-thread manager, synchronizes threads. Otherwise does nothing.
 """
-@inline barrier(::LoopManager, ::Symbol=:unknown) = nothing
+@inline barrier(::Union{Nothing, LoopManager}, ::Symbol=:unknown) = nothing
 
 macro barrier(expr)
     here = QuoteNode(Symbol(__source__.file, ':', __source__.line))

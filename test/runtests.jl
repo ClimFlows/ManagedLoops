@@ -1,4 +1,4 @@
-using ManagedLoops: ManagedLoops, @loops, @vec, @unroll
+using ManagedLoops: ManagedLoops, @loops, @vec, @unroll, parallel, barrier
 using Test
 
 struct PlainCPU <: ManagedLoops.HostManager end
@@ -16,8 +16,8 @@ end
 @loops function test2!(_, a, b, c)
     let (irange, jrange) = axes(c)
         @unroll @vec for i in irange, j in jrange
-            tp = ( c[i,j]^n for n in 1:4)
-            a[i,j] = sum(tp)
+            tup = ( c[i,j]^n for n in 1:4)
+            a[i,j] = sum(tup)
             b[i,j] = c[i,j] + c[i,j]^2 + c[i,j]^3 + c[i,j]^4
         end
     end
@@ -28,7 +28,7 @@ end
         for j in jrange
             @vec for i in irange
                 a[i,j] = @vec if b[i,j]>0 c[i,j] else c[i,j]^2 end
-                b[i,j] = b[i,j]>0 ? c[i,j] : c[i,j]^2
+                b[i,j] = @vec b[i,j]>0 ? c[i,j] : c[i,j]^2
             end
         end
     end
@@ -36,7 +36,10 @@ end
 
 function check(mgr, fun!, c)
     a, b = similar(c), similar(c)
-    fun!(mgr, a, b, c)
+    parallel(mgr) do local_mgr
+        fun!(local_mgr, a, b, c)
+        barrier(mgr)
+    end
     return a ≈ b
 end
 
