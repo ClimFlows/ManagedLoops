@@ -41,7 +41,7 @@ several times on sub-ranges, or many times on 'ranges' consisting of a single in
     This depends on how `offload` is implemented by the manager.
 
 """
-function offload end
+@inline offload(fun, ::Nothing, args...) = fun(args...)
 
 # default manager
 """
@@ -124,6 +124,6 @@ include("julia/broadcast.jl")
 
 end # internals
 
-using ._internals_: @vec, @unroll, @loops, bulk, tail
+using ._internals_: @vec, @unroll, @loops, @with, bulk, tail
 
 end # module ManagedLoops

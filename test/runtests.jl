@@ -1,4 +1,4 @@
-using ManagedLoops: ManagedLoops, @loops, @vec, @unroll, parallel, barrier
+using ManagedLoops: ManagedLoops, @with, @loops, @vec, @unroll, parallel, barrier
 using Test
 
 struct PlainCPU <: ManagedLoops.HostManager end
@@ -13,7 +13,8 @@ ManagedLoops.offload(fun, ::PlainCPU, range, args...) = fun(range, args...)
     end
 end
 
-@loops function test2!(_, a, b, c)
+function test2!(mgr, a, b, c)
+    @with mgr,
     let (irange, jrange) = axes(c)
         @unroll @vec for i in irange, j in jrange
             tup = ( c[i,j]^n for n in 1:4)
