@@ -2,6 +2,29 @@ macro loops(code)
     return esc(loops_macro_new(code))
 end
 
+macro with(expr)
+    return esc(with_macro(expr))
+end
+
+function with_macro(expr)
+    if @capture(expr, (mgr_, let names_ = values_ ; body__ ; end))
+        return :(
+        $offload($mgr, $values) do $names
+            $(body...)
+        end )
+    else
+        error("""
+        Error: @with supports only the following syntax:
+            @with mgr,
+            let lhs = rhs
+                [body]
+            end
+        where `mgr::LoopManager` may be an expression, `lhs` must be a single name or a tuple of names,
+        and `rhs` is an expression yielding the range(s) of the loop(s) to be managed.
+        """)
+    end
+end
+
 function loops_macro_new(expr)
     def = MacroTools.splitdef(expr)
     def[:args][1] == :(_) || error("""
