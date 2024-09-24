@@ -16,6 +16,7 @@ ManagedLoopsAdaptExt = ["Adapt"]
 [compat]
 Adapt = "2, 3, 4"
 MacroTools = "0.5.7"
+PackageExtensionCompat = "1"
 julia = "1.8"
 
 [extras]
