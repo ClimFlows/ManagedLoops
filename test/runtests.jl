@@ -1,4 +1,5 @@
 using ManagedLoops: ManagedLoops, @with, @loops, @vec, @unroll, parallel, barrier
+using Adapt
 using Test
 
 struct PlainCPU <: ManagedLoops.HostManager end
@@ -48,6 +49,12 @@ function test_bc(mgr, dims)
     a, b, c = ( randn(dims) for i=1:3)
     @. mgr[a] = log(exp(b)*exp(c))
     return true
+end
+
+@testset "Adapt" begin
+    x = randn(Float32, 10, 10)
+    mgr = PlainCPU()
+    @test (x |> mgr)===x
 end
 
 @testset "Macros" begin

@@ -126,4 +126,9 @@ end # internals
 
 using ._internals_: @vec, @unroll, @loops, @with, bulk, tail
 
+using PackageExtensionCompat
+function __init__()
+    @require_extensions
+end
+
 end # module ManagedLoops
