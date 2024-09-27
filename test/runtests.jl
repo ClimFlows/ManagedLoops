@@ -3,6 +3,12 @@ using Adapt
 using Test
 
 struct PlainCPU <: ManagedLoops.HostManager end
+struct MyGPU <: ManagedLoops.DeviceManager end
+struct Wrap{F,N,T<:AbstractArray{F,N}} <: AbstractArray{F,N}
+    data::T
+end
+Base.Array(w::Wrap) = w.data
+
 ManagedLoops.offload(fun, ::PlainCPU, range, args...) = fun(range, args...)
 
 @loops function test1!(_, a, b, c)
@@ -53,8 +59,13 @@ end
 
 @testset "Adapt" begin
     x = randn(Float32, 10, 10)
-    mgr = PlainCPU()
-    @test (x |> mgr)===x
+    cpu = PlainCPU()
+    @test (x |> cpu)===x
+    gpu = MyGPU()
+    @test (cpu |> gpu) == gpu
+    @test (gpu |> cpu) == cpu
+    @test (x |> cpu) === x
+    @test Wrap(x) |> cpu === x
 end
 
 @testset "Macros" begin

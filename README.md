@@ -156,6 +156,15 @@ OpenMP-like execution with long-lived threads. This is currently experimental an
 
 ## Change Log
 
+### 0.1.10
+* Sufficient `Adapt.jl` support, as far as `ManagedLoops` is concerned.
+
+### 0.1.9
+* `x |> mgr` or `mgr(x)` calls `Adapt.adapt(mgr, x)` when `Adapt.jl` is loaded.  
+
+### 0.1.8
+* Experimental `@with` macro, more flexible than `@loops`. 
+
 ### 0.1.7
 * `@vec` for ternary operator. `@vec a ? b : c` now expands to `choose(a, ()->b, ()->c)`
 
