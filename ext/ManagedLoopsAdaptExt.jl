@@ -1,7 +1,7 @@
 module ManagedLoopsAdaptExt
 
 using ManagedLoops: LoopManager
-using Adapt: adapt
+using Adapt: Adapt, adapt
 
 (mgr::LoopManager)(x) = adapt(mgr, x)
 
