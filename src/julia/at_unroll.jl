@@ -42,14 +42,14 @@ provided integers `start` and `stop` are known at parse time.
 Unrolling applies recursively `expr` and its sub-expressions.
 
 !!! warning
-    Nested use of @unroll should never be necessary and may not work as expected.
+    Nested use of @unroll should never be necessary, is not supported and may not work as expected.
 """
 macro unroll(expr)
     return esc(MacroTools.prewalk(unroll_all_, expr))
 end
 
 macro unroll(range, expr)
-    assume_(range, :(@unroll $expr))
+    unroll_in_range(range, :(@unroll $expr))
 end
 
 hardcode(expr, sym, val) =
@@ -120,17 +120,17 @@ macro tuple(expr)
     return esc(expr)
 end
 
-function assume_(range, expr)
+function unroll_in_range(range, expr)
     if @capture(range, var_Symbol in start_Int:stop_Int)
-        lines = (:(
-            if $var == $i
-                $(hardcode(expr, var, i))
-            end
-        ) for i = start:stop)
-        return esc(Expr(:block, lines...))
+        code = hardcode(expr, var, stop)
+        for i = (stop-1):-1:start+1
+            code = Expr(:elseif, :($var == $i), hardcode(expr, var, i), code)
+        end
+        code = Expr(:if, :($var == $start), hardcode(expr, var, start), code)
+        return esc(code)
     else
         error(
-            "Malformed expression 'range' in macro '@assume range expr' : '$range' provided while 'range' should be of the form 'var in start:stop' with start and stop integers known at parse time",
+            "Syntax error with pattern '@unroll range expr' : '$range' provided while 'range' should be of the form 'var in start:stop' with start and stop integers known at parse time",
         )
     end
 end
