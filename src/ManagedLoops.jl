@@ -102,9 +102,9 @@ Waits until ongoing computations on `mgr` work complete. Should be specialized f
 """
 synchronize(::LoopManager) = nothing
 
-# To support branching + SIMD
-choose(flag::Bool, iftrue, iffalse) = flag ? iftrue() : iffalse()
-
+# Fallback implementation for flag::Bool, ensures that (@vec flag ? a : b) == (flag ? a : b) 
+# The added-value method is defined in LoopManagers, for flag::SIMD.Vec{Bool}
+Base.@propagate_inbounds choose(flag::Bool, iftrue, iffalse) = flag ? iftrue() : iffalse()
 
 # parallel, barrier, master, share
 include("julia/parallel.jl")
