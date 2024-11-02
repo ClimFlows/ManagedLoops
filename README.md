@@ -156,6 +156,12 @@ OpenMP-like execution with long-lived threads. This is currently experimental an
 
 ## Change Log
 
+### 0.1.12
+* `@vec a ? b : c` propagates `@inbounds`
+
+### 0.1.11
+* `@unroll n in start:stop ...` expands to `if n==start ... elseif ... else ... end`
+
 ### 0.1.10
 * Sufficient `Adapt.jl` support, as far as `ManagedLoops` is concerned.
 
