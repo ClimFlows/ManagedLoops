@@ -14,29 +14,33 @@ ManagedLoops.offload(fun, ::PlainCPU, range, args...) = fun(range, args...)
 @loops function test1!(_, a, b, c)
     let irange = eachindex(a, b, c)
         @vec for i in irange
-            a[i] = @unroll sum( c[i]^n for n in 1:4)
+            a[i] = @unroll sum(c[i]^n for n in 1:4)
             b[i] = c[i] + c[i]^2 + c[i]^3 + c[i]^4
         end
     end
 end
 
 function test2!(mgr, a, b, c)
-    @with mgr,
+    @with mgr, 
     let (irange, jrange) = axes(c)
         @unroll @vec for i in irange, j in jrange
-            tup = ( c[i,j]^n for n in 1:4)
-            a[i,j] = sum(tup)
-            b[i,j] = c[i,j] + c[i,j]^2 + c[i,j]^3 + c[i,j]^4
+            tup = (c[i, j]^n for n in 1:4)
+            a[i, j] = sum(tup)
+            b[i, j] = c[i, j] + c[i, j]^2 + c[i, j]^3 + c[i, j]^4
         end
     end
 end
 
-@loops function test3!(_, a, b, c)
-    let (irange, jrange) = axes(c)
+function test3!(mgr, a, b, c)
+    @with mgr let (irange, jrange) = axes(c)
         for j in jrange
             @vec for i in irange
-                a[i,j] = @vec if b[i,j]>0 c[i,j] else c[i,j]^2 end
-                b[i,j] = @vec b[i,j]>0 ? c[i,j] : c[i,j]^2
+                a[i, j] = @vec if b[i, j] > 0
+                    c[i, j]
+                else
+                    c[i, j]^2
+                end
+                b[i, j] = @vec b[i, j] > 0 ? c[i, j] : c[i, j]^2
             end
         end
     end
@@ -46,26 +50,26 @@ function check(mgr, fun!, c)
     a, b = similar(c), similar(c)
     parallel(mgr) do local_mgr
         fun!(local_mgr, a, b, c)
-        barrier(mgr)
+        return barrier(mgr)
     end
     return a ≈ b
 end
 
 function test_bc(mgr, dims)
-    a, b, c = ( randn(dims) for i=1:3)
-    @. mgr[a] = log(exp(b)*exp(c))
+    a, b, c = (randn(dims) for i in 1:3)
+    @. mgr[a] = log(exp(b) * exp(c))
     return true
 end
 
 @testset "Adapt" begin
     x = randn(Float32, 10, 10)
     cpu = PlainCPU()
-    @test (x |> cpu)===x
+    @test (cpu(x)) === x
     gpu = MyGPU()
-    @test (cpu |> gpu) == gpu
-    @test (gpu |> cpu) == cpu
-    @test (x |> cpu) === x
-    @test Wrap(x) |> cpu === x
+    @test (gpu(cpu)) == gpu
+    @test (cpu(gpu)) == cpu
+    @test (cpu(x)) === x
+    @test cpu(Wrap(x)) === x
 end
 
 @testset "Macros" begin
@@ -79,7 +83,7 @@ end
 @testset "Broadcast" begin
     mgr = PlainCPU()
     @test test_bc(mgr, 1000)
-    @test test_bc(mgr, (100,100))
-    @test test_bc(mgr, (100,100,100))
-    @test test_bc(mgr, (10,10,10))
+    @test test_bc(mgr, (100, 100))
+    @test test_bc(mgr, (100, 100, 100))
+    @test test_bc(mgr, (10, 10, 10))
 end
