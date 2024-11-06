@@ -5,25 +5,43 @@ end
 macro with(expr)
     return esc(with_macro(expr))
 end
+macro with(mgr, expr)
+    return esc(with_macro(mgr, expr))
+end
+
+function with_macro(mgr, expr)
+    if @capture(expr, (let names_ = values_ ; body__ ; end))
+        return expand_with(mgr, names, values, body)
+    end
+    with_error()
+end
 
 function with_macro(expr)
     if @capture(expr, (mgr_, let names_ = values_ ; body__ ; end))
-        return :(
-        $offload($mgr, $values) do $names
-            $(body...)
-        end )
-    else
-        error("""
-        Error: @with supports only the following syntax:
-            @with mgr,
-            let lhs = rhs
-                [body]
-            end
-        where `mgr::LoopManager` may be an expression, `lhs` must be a single name or a tuple of names,
-        and `rhs` is an expression yielding the range(s) of the loop(s) to be managed.
-        """)
+        return expand_with(mgr, names, values, body)
     end
+    with_error()
 end
+
+expand_with(mgr, names, values, body) = :(
+    $offload($mgr, $values) do $names
+        $(body...)
+    end )
+
+with_error() = error("""
+Error: @with supports only the following syntaxes:
+    
+    @with mgr, let lhs = rhs
+        [body]
+    end
+
+    @with mgr let lhs = rhs
+        [body]
+    end
+
+where `mgr::LoopManager` may be an expression, `lhs` must be a single name or a tuple of names,
+and `rhs` is an expression yielding the range(s) of the loop(s) to be managed.
+""")
 
 function loops_macro_new(expr)
     def = MacroTools.splitdef(expr)
